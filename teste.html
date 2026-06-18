@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Banco 2.0</title>
+    <style>
+        body { background-color: #0d0d0d; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 20px; margin: 0; }
+        pre { font-size: 10px; line-height: 1.2; color: #00ff00; overflow-x: auto; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .input-group { margin-top: 20px; display: flex; align-items: center; flex-wrap: wrap; position: relative; }
+        .prompt { color: #00ff00; font-weight: bold; margin-right: 10px; }
+        .prompt::after { content: "_"; animation: pisca 0.8s infinite; }
+        input, select { background: transparent; border: none; border-bottom: 2px solid #00ff00; color: #00ff00; font-family: 'Courier New', Courier, monospace; font-size: 16px; outline: none; padding: 5px; }
+        button { background-color: #00ff00; color: #0d0d0d; border: none; padding: 8px 15px; font-family: 'Courier New', Courier, monospace; font-weight: bold; cursor: pointer; margin-left: 10px; transition: background 0.2s; }
+        button:hover { background-color: #00cc00; }
+        .status-box { margin: 20px 0; border: 1px solid #00ff00; padding: 15px; display: none; background-color: rgba(0, 255, 0, 0.05); }
+        .hidden { display: none !important; }
+        
+        /* Container para alinhar a seta e o botão */
+        .secao-perigo {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 25px;
+        }
+
+        /* Balão de Aviso "NÃO CLIQUE!" com Seta */
+        .aviso-seta {
+            color: #ff3333;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #ff0000;
+            margin-bottom: 8px;
+            animation: balanco 0.6s infinite alternate, pisca-texto 0.4s infinite alternate;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Botão 67 Destacado */
+        .botao-secreto {
+            background-color: #ff0000;
+            color: #ffffff;
+            border: 2px solid #ff3333;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 20px;
+            display: inline-block;
+            outline: none;
+            box-shadow: 0 0 15px #ff0000;
+            animation: alerta-67 1s infinite alternate;
+        }
+        .botao-secreto:hover {
+            background-color: #cc0000;
+            box-shadow: 0 0 25px #ff3333;
+        }
+
+        @keyframes pisca {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes pisca-texto {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes alerta-67 {
+            0% { transform: scale(1); box-shadow: 0 0 10px #ff0000; }
+            100% { transform: scale(1.05); box-shadow: 0 0 25px #ff3333; }
+        }
+
+        @keyframes balanco {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Tela 1: Abertura do Banco -->
+    <div id="tela-abertura">
+        <pre>
+ ____  _   _ _   _  ____ ___  
+
+
+
+|  _ \| | | | \ | |/ ___/ _ \ 
+| |_) | | | |  \| | |  | | | |
+|  _ <| |_| | |\  | |__| |_| |
+|_| \_\\___/|_| \_|\____\___/ 
+        </pre>
+        <div class="input-group">
+            <span class="prompt">Quantos moneys você tem? ></span>
+            <input type="number" id="saldo-inicial" placeholder="Ex: 1000" min="0" step="0.01">
+            <button onclick="iniciarBanco()">Entrar</button>
+            
+            <!-- Correção da chamada window.open com a string de URL limpa -->
+            <div class="secao-perigo">
+                <div class="aviso-seta">NÃO CLIQUE!<br>⬇</div>
+                <button class="botao-secreto" onclick="window.open('https://www.youtube.com/watch?v=fyiIY_bnecU', '_blank')">67</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela 2: Operações Principais -->
+    <div id="tela-operacoes" class="hidden">
+        <pre>
+  ___  ____  _____ ____    _    ____ ___   _____ ____  
+ / _ \|  _ \| ____|  _ \  / \  / ___/ _ \ | ____/ ___| 
+
+
+
+
+| | | | |_) |  _| | |_) |/ _ \| |  | | | ||  _| \___ \ 
+| |_| |  __/| |___|  _ &lt; / ___ \ |__| |_| || |___ ___) |
+ \___/|_|   |_____|_| \_/_/   \_\____\___/ |_____|____/ 
+        </pre>
+        <div class="status-box" id="painel-saldo" style="display: block;">
+            <p>Saldo Atual: <span id="val-saldo">0.00</span> moneys</p>
+        </div>
+
+        <div id="bloco-escolha">
+            <p>Escolha uma opção:</p>
+            <p>1 - Sacar</p>
+            <p>2 - Depositar</p>
+            <p>3 - Empréstimo</p>
+            <div class="input-group">
+                <span class="prompt">&gt;</span>
+                <select id="opcao-selecionada">
+                    <option value="sacar">Sacar</option>
+                    <option value="depositar">Depositar</option>
+                    <option value="emprestimo">Empréstimo</option>
+                </select>
+                <button onclick="avancarOpcao()">Avançar</button>
+            </div>
+        </div>
+
+        <!-- Formulário Dinâmico de Valores -->
+        <div id="bloco-valor" class="hidden">
+            <p id="texto-pergunta">Quanto você quer sacar?</p>
+            <div class="input-group">
+                <span class="prompt">$ &gt;</span>
+                <input type="number" id="valor-operacao" min="0.01" step="0.01">
+                <button onclick="executarOperacao()">Confirmar</button>
+            </div>
+        </div>
+
+        <!-- Mensagem de Resultado -->
+        <div id="mensagem-resultado" class="status-box"></div>
+
+        <!-- Pergunta Loop -->
+        <div id="bloco-repetir" class="hidden">
+            <p>Deseja fazer uma nova operação?</p>
+            <button onclick="resetMenu()">Sim</button>
+            <button onclick="fecharSistema()">Não</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let dinheiro = 0;
+    let acaoAtual = '';
+
+    function atualizarDisplaySaldo() {
+        document.getElementById('val-saldo').innerText = dinheiro.toFixed(2);
+    }
+
+    function iniciarBanco() {
+        const inputSaldo = document.getElementById('saldo-inicial').value;
+        const valorInserido = parseFloat(inputSaldo);
+
+        if(inputSaldo === "" || isNaN(valorInserido) || valorInserido < 0) {
+            alert("Insira um valor de saldo válido e maior ou igual a zero!");
+            return;
+        }
+        
+        dinheiro = valorInserido;
+        atualizarDisplaySaldo();
+        document.getElementById('tela-abertura').classList.add('hidden');
+        document.getElementById('tela-operacoes').classList.remove('hidden');
+    }
+
+    function avancarOpcao() {
+        acaoAtual = document.getElementById('opcao-selecionada').value;
+        const textoPergunta = document.getElementById('texto-pergunta');
+        
+        if(acaoAtual === 'sacar') textoPergunta.innerText = "Quanto você deseja sacar?";
+        if(acaoAtual === 'depositar') textoPergunta.innerText = "Quanto você deseja depositar?";
+        if(acaoAtual === 'emprestimo') textoPergunta.innerText = "Quanto você deseja de empréstimo?";
+        
+        document.getElementById('bloco-escolha').classList.add('hidden');
+        document.getElementById('bloco-valor').classList.remove('hidden');
+    }
+
+    function ejecutarOperacao() {
+        const inputValor = document.getElementById('valor-operacao').value;
+        const valor = parseFloat(inputValor);
+        const txtResultado = document.getElementById('mensagem-resultado');
+
+        if(inputValor === "" || isNaN(valor) || valor <= 0) {
+            alert("Por favor, digite um valor numérico válido e maior que zero.");
+            return;
+        }
+
+        txtResultado.style.display = "block";
+
+        if(acaoAtual === 'sacar') {
+            if(valor <= dinheiro) {
+                dinheiro -= valor;
+                txtResultado.innerText = `Sucesso! Novo saldo: ${dinheiro.toFixed(2)} moneys.`;
+            } else {
+                txtResultado.innerText = "Saldo insuficiente para realizar este saque.";
+            }
+        } else if(acaoAtual === 'depositar') {
+            dinheiro += valor;
+            txtResultado.innerText = `Sucesso! Novo saldo: ${dinheiro.toFixed(2)} moneys.`;
+        } else if(acaoAtual === 'emprestimo') {
+            dinheiro += valor;
+            txtResultado.innerText = `Empréstimo aprovado! Novo saldo: ${dinheiro.toFixed(2)} moneys.`;
+        }
+
+        atualizarDisplaySaldo();
+        document.getElementById('bloco-valor').classList.add('hidden');
+        document.getElementById('bloco-repetir').classList.remove('hidden');
+    }
+
+    function resetMenu() {
+        document.getElementById('valor-operacao').value = '';
+        document.getElementById('mensagem-resultado').style.display = "none";
+        document.getElementById('bloco-repetir').classList.add('hidden');
+        document.getElementById('bloco-escolha').classList.remove('hidden');
+    }
+
+    function fecharSistema() {
+        const tela = document.getElementById('tela-operacoes');
+        tela.innerHTML = "<h2 style='color: #00ff00; font-family: inherit;'>Obrigado por usar o Banco! Até logo, chefe.</h2>";
+    }
+</script>
+</body>
+</html>
